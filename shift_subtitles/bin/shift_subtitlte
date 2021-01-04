@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+require_relative '../lib/srt_time.rb'
+
+options = {}
+parser = OptionParser.new do |opts|
+  opts.banner = 'Usage shift_subtitle [options]'
+  opts.on('--operation [VALUE]', String, 'Get operation [add or sub]') do |operation|
+    options[:operation] = operation == 'add' ? '+' : '-'
+  end
+  opts.on('--time [VALUE]', 'Get time to ahead or back. Use format 99,999 ("seconds,milliseconds”)') do |time|
+    options[:time] = time.gsub(',', '.').to_f
+  end
+end
+parser.parse!
+
+if ARGV.size > 1
+  raise "You must be give an \'srt\' file format" unless ARGV[0].match(/^*.srt/)
+
+  options.merge!({ input_file: ARGV.first })
+  options.merge!({ output_file: ARGV.last })
+
+  File.readlines(options[:input_file]).each do |line|
+    File.write(options[:output_file], SrtTime.new(line, options).srt_time, mode: 'a')
+  end
+
+else
+  puts "No arguments gigen, try \'shift_subtitle --help\'"
+end
